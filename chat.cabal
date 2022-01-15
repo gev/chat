@@ -5,6 +5,8 @@ version:            0.1.0.0
 author:             Evgeny Gazdovsky
 maintainer:         gazdovsky@gmail.com
 
+build-type:         Simple
+
 extra-source-files: CHANGELOG.md
 
 common common-all

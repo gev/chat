@@ -8,7 +8,6 @@ import           Control.Monad.Trans (liftIO)
 import           Data.Text           (Text)
 import qualified Data.Text           as T
 import qualified Data.Text.IO        as T
-import           Network.Socket      (withSocketsDo)
 import qualified Network.WebSockets  as WS
 
 app :: WS.ClientApp ()
@@ -16,7 +15,7 @@ app conn = do
     putStrLn "Connected!"
 
     -- Fork a thread that writes WS data to stdout
-    forkIO $
+    _ <- forkIO $
         forever $ do
             msg <- WS.receiveData conn
             liftIO $ T.putStrLn msg

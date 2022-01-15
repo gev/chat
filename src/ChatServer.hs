@@ -6,9 +6,7 @@ import           Control.Concurrent (MVar, modifyMVar, modifyMVar_, newMVar,
                                      readMVar)
 import           Control.Exception  (finally)
 import           Control.Monad      (forM_, forever)
-import           Data.Bits          (Bits (xor))
 import           Data.Char          (isPunctuation, isSpace)
-import           Data.Monoid        (mappend)
 import           Data.Text          (Text)
 import qualified Data.Text          as T
 import qualified Data.Text.IO       as T
@@ -26,10 +24,6 @@ type ServerState = [Client]
 -- Create a new, initial state:
 newServerState :: ServerState
 newServerState = []
-
--- Get the number of active clients:
-numClients :: ServerState -> Int
-numClients = length
 
 -- Check if a user already exists (based on username):
 clientExists :: Client -> ServerState -> Bool

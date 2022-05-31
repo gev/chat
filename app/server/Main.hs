@@ -1,6 +1,6 @@
 module Main where
 
-import ChatServer ( server )
+import           Chat.Server (server)
 
 main :: IO ()
-main = server
+main = server "0.0.0.0" 9160

@@ -1,6 +1,6 @@
 module Main where
 
-import ChatClient ( client )
+import           Chat.Client (client)
 
 main :: IO ()
-main = client
+main = client "192.168.11.9" 9160

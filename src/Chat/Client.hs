@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module ChatClient (client) where
+module Chat.Client (client) where
 
 import           Control.Concurrent  (forkIO)
 import           Control.Monad       (forever, unless)
@@ -28,5 +28,5 @@ app conn = do
     loop
     WS.sendClose conn ("Bye!" :: Text)
 
-client :: IO ()
-client = WS.runClient "192.168.11.9" 9160 "/" app
+client :: String -> Int -> IO ()
+client host port = WS.runClient host port "/" app

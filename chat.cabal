@@ -21,17 +21,17 @@ common common-executable
 
 library
     import:           common-all
-    exposed-modules:  ChatClient, ChatServer      
+    exposed-modules:  Chat.Client, Chat.Server      
     hs-source-dirs:   src
 
 executable client
     import:           common-executable
     main-is:          Main.hs
-    other-modules:    ChatClient
+    other-modules:    Chat.Client
     hs-source-dirs:   app/client, src
 
 executable server
     import:           common-executable
     main-is:          Main.hs
-    other-modules:    ChatServer
+    other-modules:    Chat.Server
     hs-source-dirs:   app/server, src

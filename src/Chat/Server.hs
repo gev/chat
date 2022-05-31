@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module ChatServer (server) where
+module Chat.Server (server) where
 
 import           Control.Concurrent (MVar, modifyMVar, modifyMVar_, newMVar,
                                      readMVar)
@@ -113,7 +113,7 @@ application state pending =
 -- actual server. For this purpose, we use the simple server provided by
 -- `WS.runServer`.
 
-server :: IO ()
-server = do
+server :: String -> Int -> IO ()
+server host port = do
   state <- newMVar newServerState
-  WS.runServer "0.0.0.0" 9160 $ application state
+  WS.runServer host port $ application state

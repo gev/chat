@@ -6,9 +6,10 @@ import           Control.Concurrent (MVar, modifyMVar, modifyMVar_, newMVar,
                                      readMVar)
 import           Control.Exception  (finally)
 import           Control.Monad      (forM_, forever)
-import           Data.Char          (isPunctuation, isSpace)
+import           Data.Char
 import           Data.Text          (Text)
 import qualified Data.Text          as T
+import qualified Data.Text.Encoding as T
 import qualified Data.Text.IO       as T
 import qualified Network.WebSockets as WS
 
@@ -65,53 +66,39 @@ application :: MVar ServerState -> WS.ServerApp
 application state pending =
   do
     conn <- WS.acceptRequest pending
-    WS.withPingThread conn 30 (return ()) $ do
-      msg <- WS.receiveData conn
-      clients <- readMVar state
-      case msg of
-        _
-          | not (prefix `T.isPrefixOf` msg) ->
-            WS.sendTextData conn ("Wrong announcement" :: Text)
-          -- Check the validity of the username:
-          | any
-              ($ fst client)
-              [T.null, T.any isPunctuation, T.any isSpace] ->
-            WS.sendTextData
-              conn
+    let req = WS.pendingRequest pending
+    let name = T.tail $ T.decodeUtf8 $ WS.requestPath req
+    if any ($ name) [T.null, T.any isPunctuation, T.any isSpace]
+      then
+        WS.sendTextData conn
               ( "Name cannot "
                   <> "contain punctuation or whitespace, and "
-                  <> "cannot be empty" ::
-                  Text
+                  <> "cannot be empty" :: Text
               )
-          -- Check that the given username is not already taken:
-          | clientExists client clients ->
-            WS.sendTextData conn ("User already exists" :: Text)
-          -- All is right! We're going to allow the client, but for safety reasons we *first*
-          -- setup a `disconnect` function that will be run when the connection is closed.
-          | otherwise -> flip finally disconnect $ do
-            -- We send a "Welcome!", according to our own little protocol. We add the client to
-            -- the list and broadcast the fact that he has joined. Then, we give control to the
-            -- 'talk' function.
+      else (do
+        let client = (name, conn)
+        clients <- readMVar state
+        if clientExists client clients
+          then WS.sendTextData conn ("User already exists" :: Text)
+          else (do
             modifyMVar_ state $ \s -> do
               let s' = addClient client s
               WS.sendTextData conn $
                 "Welcome! Users: "
                   <> T.intercalate ", " (map fst s)
-              broadcast (fst client <> " joined") s'
+              broadcast (name <> " joined") s'
               return s'
-            talk client state
-          where
-            prefix = "Hi! I am "
-            client = (T.drop (T.length prefix) msg, conn)
-            disconnect = do
-              -- Remove client and return new state
-              s <- modifyMVar state $ \s ->
-                let s' = removeClient client s in return (s', s')
-              broadcast (fst client <> " disconnected") s
+            WS.withPingThread conn 30 (return ()) $ do
+              finally
+                (talk client state)
+                (do
+                  s <- modifyMVar state $ \s ->
+                    let s' = removeClient client s in return (s', s')
+                  broadcast (fst client <> " disconnected") s
+                )
+            )
 
--- The server function first creates a new state for the server, then spawns the
--- actual server. For this purpose, we use the simple server provided by
--- `WS.runServer`.
+      )
 
 server :: String -> Int -> IO ()
 server host port = do

@@ -29,4 +29,4 @@ app conn = do
     WS.sendClose conn ("Bye!" :: Text)
 
 client :: String -> Int -> IO ()
-client host port = WS.runClient host port "/" app
+client host port = WS.runClient host port "/test" app
